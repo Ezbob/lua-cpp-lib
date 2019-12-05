@@ -1,0 +1,109 @@
+#include <iostream>
+#include <string>
+#include "lua.hpp"
+
+struct Player {
+    std::string title;
+    std::string name;
+    int level;
+};
+
+int main(int argc, char **argv) {
+
+    if ( argc < 2 ) {
+        std::cerr << "Error: Expected first argument to be path to script" << std::endl;
+        exit(1);
+    }
+
+    Player player;
+
+    char *filename = argv[1];
+
+    LuaState L;
+
+    luaL_openlibs(L);
+
+    L.loadFile(filename);
+
+    L.getFunction("AddStuff");
+
+    L.push(32);
+    L.push(20);
+
+    L.safeCallFunction(2, 1);
+
+    std::cout << "Got result from lua: " << L.getNumber() << std::endl;
+
+    if ( auto tableRef = L.requestGlobalTable("Player") ) {
+        int top = L.size(), size;
+        std::cout << "-->" << top << std::endl;
+
+        if ( auto nameRef = tableRef.getString("Name") ) {
+            player.name = (*nameRef);
+        }
+
+        if ( auto titleRef = tableRef.getString("Title") ) {
+            player.title = (*titleRef);
+        }
+
+        if ( auto levelRef = tableRef.getNumber("Level") ) {
+            player.level = (*levelRef);
+        }
+
+        if ( auto funcRef = tableRef.getFunction("F") ) {
+            L.push(12);
+            funcRef(1, 1);
+            std::cout << L.getNumber() << std::endl;
+            L.pop();
+        }
+
+        if (auto boolRef = tableRef.getBoolean("IsHero")) {
+            std::cout << "Is hero? " << (*boolRef) << std::endl;
+        }
+
+        size = L.size() - top;
+        std::cout << "-->" << size << std::endl;
+
+        std::cout << player.name << std::endl;
+        std::cout << player.title << std::endl;
+        std::cout << player.level << std::endl;
+
+        L.pop(size);
+    }
+    std::cout << "size " << L.size() << std::endl;
+
+    /*
+    L.push("Name");
+    L.requestFromTable();
+    if ( L.hasString() ) {
+        player.name = L.getString();
+    }
+    L.pop();
+
+    L.push("Title");
+    L.requestFromTable();
+    if ( L.hasString() ) {
+        player.title = L.getString();
+    }
+    L.pop();
+
+    L.push("Level");
+    L.requestFromTable();
+    if ( L.hasNumber() ) {
+        player.level = L.getNumber();
+    }
+    L.pop();
+
+    std::cout << 
+        player.name << 
+        ", " << 
+        player.title <<
+        ", (level " <<
+        player.level <<
+        ")" << 
+        std::endl;
+
+    */
+
+    return 0;
+}
