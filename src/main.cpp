@@ -25,18 +25,20 @@ int main(int argc, char **argv) {
 
     L.loadFile(filename);
 
-    L.getFunction("AddStuff");
+    auto funref = L.getFunction("AddStuff");
 
     L.push(32);
     L.push(20);
 
-    L.safeCallFunction(2, 1);
+    funref(2, 1);
 
-    std::cout << "Got result from lua: " << L.getNumber() << std::endl;
+    std::cout << "Got result from lua: " << (*L.getNumber()) << std::endl;
 
-    if ( auto tableRef = L.requestGlobalTable("Player") ) {
+    if ( auto tableRef = L.getTable("Player") ) {
         int top = L.size(), size;
         std::cout << "-->" << top << std::endl;
+
+        std::cout << "is valid " << tableRef.getString("namama") << std::endl;
 
         if ( auto nameRef = tableRef.getString("Name") ) {
             player.name = (*nameRef);
@@ -53,11 +55,11 @@ int main(int argc, char **argv) {
         if ( auto funcRef = tableRef.getFunction("F") ) {
             L.push(12);
             funcRef(1, 1);
-            std::cout << L.getNumber() << std::endl;
+            std::cout << "Function F: " << L.getNumber() << std::endl;
             L.pop();
         }
 
-        if (auto boolRef = tableRef.getBoolean("IsHero")) {
+        if ( auto boolRef = tableRef.getBoolean("IsHero") ) {
             std::cout << "Is hero? " << (*boolRef) << std::endl;
         }
 

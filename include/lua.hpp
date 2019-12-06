@@ -13,7 +13,30 @@ extern "C" {
 #include <memory>
 #include <exception>
 
-const int STACK_TOP = -1;
+class LuaException;
+
+// generic lua index
+class LuaStackIndex {
+    int index;
+
+public:
+    LuaStackIndex(int i) : index(i) {}
+    virtual ~LuaStackIndex() = default;
+
+    bool isTop() {
+        return index <= 0;
+    }
+
+    bool isBottom() {
+        return index >= 0;
+    }
+
+    int get() {
+        return index;
+    }
+};
+
+static LuaStackIndex STACK_TOP = LuaStackIndex(-1);
 
 class LuaType {
 public:
@@ -51,6 +74,22 @@ public:
         return value;
     }
 
+    bool operator ==(const LuaType &other) const {
+        return value == other.value;
+    }
+
+    bool operator !=(const LuaType &other) const {
+        return value != other.value;
+    }
+
+    bool operator ==(const int &other) const {
+        return value == other;
+    }
+
+    bool operator !=(const int &other) const {
+        return value != other;
+    }
+
 private:
     enum Types value;
 };
@@ -68,20 +107,20 @@ class LuaState;
 class LuaStackReferenceBase {
     LuaType m_type;
     std::weak_ptr<lua_State> m_parent;
-    int m_index;
+protected:
+    LuaStackIndex m_index;
+    LuaStackReferenceBase(std::shared_ptr<lua_State> s, LuaStackIndex i, int type) 
+        : m_type(LuaType(type)), m_parent(s), m_index(i.get()) {}
 public:
-    LuaStackReferenceBase(std::shared_ptr<lua_State> s, LuaType type) : m_type(type), m_parent(s), m_index(STACK_TOP) {}
-    LuaStackReferenceBase(std::shared_ptr<lua_State> s, int i, LuaType type) : m_type(type), m_parent(s), m_index(i) {}
+    LuaStackReferenceBase(std::shared_ptr<lua_State> s, LuaStackIndex i, LuaType type) 
+        : m_type(type), m_parent(s), m_index(i.get()) {}
     virtual ~LuaStackReferenceBase() = default;
 
-    int getIndex() {
-        return m_index;
-    }
-
     bool isValid() {
-        auto state = getParent();
-        auto is_index_within_bounds = (m_index < 0 || (0 < m_index && m_index <= lua_gettop(state.get())));
-        auto is_right_type = lua_type(state.get(), m_index) == m_type;
+        lua_State *state = getParent().get();
+        int index = m_index.get();
+        auto is_index_within_bounds = 0 < index && index <= lua_gettop(state);
+        auto is_right_type = lua_type(state, index) == m_type;
         return is_index_within_bounds && is_right_type;
     }
 
@@ -99,13 +138,13 @@ protected:
 };
 
 struct LuaNumberRef : public LuaStackReferenceBase {
-    LuaNumberRef(std::shared_ptr<lua_State> s, int i, LuaType type) : LuaStackReferenceBase(s, i, type) {}
+    LuaNumberRef(std::shared_ptr<lua_State> s, LuaStackIndex i) : LuaStackReferenceBase(s, i, LuaType(LuaType::NUMBER_TYPE)) {}
     virtual ~LuaNumberRef() = default;
 
     double getValue() {
         if ( isValid() ) {
             auto shrd_ptr = getParent();
-            return lua_tonumber(shrd_ptr.get(), getIndex());
+            return lua_tonumber(shrd_ptr.get(), m_index.get());
         }
         return 0;
     }
@@ -116,13 +155,13 @@ struct LuaNumberRef : public LuaStackReferenceBase {
 };
 
 struct LuaStringRef : public LuaStackReferenceBase {
-    LuaStringRef(std::shared_ptr<lua_State> s, int i, LuaType type) : LuaStackReferenceBase(s, i, type) {}
+    LuaStringRef(std::shared_ptr<lua_State> s, LuaStackIndex i) : LuaStackReferenceBase(s, i, LuaType::STRING_TYPE) {}
     virtual ~LuaStringRef() = default;
 
     std::string getValue() {
         if ( isValid() ) {
             auto shrd_ptr = getParent();
-            return lua_tostring(shrd_ptr.get(), getIndex());
+            return lua_tostring(shrd_ptr.get(), m_index.get());
         }
         return "";
     }
@@ -133,13 +172,13 @@ struct LuaStringRef : public LuaStackReferenceBase {
 };
 
 struct LuaBooleanRef : public LuaStackReferenceBase {
-    LuaBooleanRef(std::shared_ptr<lua_State> s, int i, LuaType type) : LuaStackReferenceBase(s, i, type) {}
+    LuaBooleanRef(std::shared_ptr<lua_State> s, LuaStackIndex i) : LuaStackReferenceBase(s, i, LuaType::BOOLEAN_TYPE) {}
     virtual ~LuaBooleanRef() = default;
 
     bool getValue() {
         if ( isValid() ) {
             auto shrd_ptr = getParent();
-            return lua_toboolean(shrd_ptr.get(), getIndex());
+            return lua_toboolean(shrd_ptr.get(), m_index.get());
         }
         return false;
     }
@@ -150,14 +189,14 @@ struct LuaBooleanRef : public LuaStackReferenceBase {
 };
 
 struct LuaFunctionRef : public LuaStackReferenceBase {
-    LuaFunctionRef(std::shared_ptr<lua_State> s, int i, LuaType type) : LuaStackReferenceBase(s, i, type) {}
+    LuaFunctionRef(std::shared_ptr<lua_State> s, LuaStackIndex i) : LuaStackReferenceBase(s, i, LuaType::FUNCTION_TYPE) {}
     virtual ~LuaFunctionRef() = default;
 
     void safeCall(unsigned int input, unsigned int output, int handlerIndex = 0) {
         if ( isValid() ) {
             auto shrd_ptr = getParent();
             if (lua_pcall(shrd_ptr.get(), (int) input, (int) output, handlerIndex) != LUA_OK) {
-                throw LuaException(lua_tostring(shrd_ptr.get(), STACK_TOP));
+                throw LuaException(lua_tostring(shrd_ptr.get(), STACK_TOP.get()));
             }
         }
     }
@@ -172,35 +211,35 @@ struct LuaFunctionRef : public LuaStackReferenceBase {
 };
 
 struct LuaTableRef : public LuaStackReferenceBase {
-    LuaTableRef(std::shared_ptr<lua_State> s, int i, LuaType type) : LuaStackReferenceBase(s, i, type) {}
+    LuaTableRef(std::shared_ptr<lua_State> s, LuaStackIndex i) : LuaStackReferenceBase(s, i, LuaType::TABLE_TYPE) {}
     virtual ~LuaTableRef() = default;
 
     LuaStringRef getString(const std::string &name) {
         auto state = getParent();
         lua_pushstring(state.get(), name.c_str());
-        lua_gettable(state.get(), getIndex());
-        return LuaStringRef(state, lua_gettop(state.get()), LuaType(LuaType::STRING_TYPE));
+        lua_gettable(state.get(), m_index.get());
+        return LuaStringRef(state, lua_gettop(state.get()));
     }
 
     LuaBooleanRef getBoolean(const std::string &name) {
         auto state = getParent();
         lua_pushstring(state.get(), name.c_str());
-        lua_gettable(state.get(), getIndex());
-        return LuaBooleanRef(state, lua_gettop(state.get()), LuaType(LuaType::BOOLEAN_TYPE));
+        lua_gettable(state.get(), m_index.get());
+        return LuaBooleanRef(state, lua_gettop(state.get()));
     }
 
     LuaNumberRef getNumber(const std::string &name) {
         auto state = getParent();
         lua_pushstring(state.get(), name.c_str());
-        lua_gettable(state.get(), getIndex());
-        return LuaNumberRef(state, lua_gettop(state.get()), LuaType(LuaType::NUMBER_TYPE));
+        lua_gettable(state.get(), m_index.get());
+        return LuaNumberRef(state, lua_gettop(state.get()));
     }
 
     LuaFunctionRef getFunction(const std::string &name) {
         auto state = getParent();
         lua_pushstring(state.get(), name.c_str());
-        lua_gettable(state.get(), getIndex());
-        return LuaFunctionRef(state, lua_gettop(state.get()), LuaType(LuaType::FUNCTION_TYPE));
+        lua_gettable(state.get(), m_index.get());
+        return LuaFunctionRef(state, lua_gettop(state.get()));
     }
 
 };
@@ -216,10 +255,6 @@ public:
     }
 
     virtual ~LuaState() = default;
-
-    lua_State *ptr() {
-        return m_state.get();
-    }
 
     operator lua_State *() {
         return m_state.get();
@@ -242,24 +277,6 @@ public:
 
     void loadFile(const std::string &path) {
         loadFile(path.c_str());
-    }
-
-    LuaType requestGlobal(const std::string &name) {
-        return requestGlobal(name.c_str());
-    }
-
-    LuaType requestGlobal(const char *name) {
-        return static_cast<LuaType>(lua_getglobal(m_state.get(), name));
-    }
-
-    LuaStringRef requestGlobalString(const char *name) {
-        lua_getglobal(m_state.get(), name);
-        return LuaStringRef(m_state, size(), LuaType(LuaType::STRING_TYPE));
-    }
-
-    LuaTableRef requestGlobalTable(const char *name) {
-        lua_getglobal(m_state.get(), name);
-        return LuaTableRef(m_state, size(), LuaType(LuaType::TABLE_TYPE));
     }
 
     void push(void) {
@@ -286,66 +303,44 @@ public:
         lua_pushstring(m_state.get(), val.c_str());
     }
 
-    bool hasNumber(int index = STACK_TOP) {
-        return lua_isnumber(m_state.get(), index);
+    LuaStringRef getString(LuaStackIndex i = STACK_TOP) {
+        lua_tostring(m_state.get(), i.get());
+        return LuaStringRef(m_state, size());
     }
 
-    double getNumber(int index = STACK_TOP) {
-        return (double) lua_tonumber(m_state.get(), index);
+    LuaNumberRef getNumber(LuaStackIndex i = STACK_TOP) {
+        lua_tonumber(m_state.get(), i.get());
+        return LuaNumberRef(m_state, lua_gettop(m_state.get()));
     }
 
-    bool hasTable(int index = STACK_TOP) {
-        return lua_istable(m_state.get(), index);
+    LuaBooleanRef getBoolean(LuaStackIndex i = STACK_TOP) {
+        lua_toboolean(m_state.get(), i.get());
+        return LuaBooleanRef(m_state, lua_gettop(m_state.get()));
     }
 
-    void requestFromTable(int table_index = STACK_TOP) {
-        lua_gettable(m_state.get(), table_index);
+    LuaStringRef getString(const std::string &name) {
+        lua_getglobal(m_state.get(), name.c_str());
+        return LuaStringRef(m_state, top());
     }
 
-    LuaType requestFromTable(const std::string &name, int table_index = STACK_TOP) {
-        push(name);
-        return lua_gettable(m_state.get(), table_index);
+    LuaNumberRef getNumber(const std::string &name) {
+        lua_getglobal(m_state.get(), name.c_str());
+        return LuaNumberRef(m_state, top());
     }
 
-    bool hasString(int index = STACK_TOP) {
-        return lua_isstring(m_state.get(), index);
+    LuaBooleanRef getBoolean(const std::string &name) {
+        lua_getglobal(m_state.get(), name.c_str());
+        return LuaBooleanRef(m_state, top());
     }
 
-    std::string getString(int index = STACK_TOP) {
-        return lua_tostring(m_state.get(), index);
+    LuaFunctionRef getFunction(const std::string &name) {
+        lua_getglobal(m_state.get(), name.c_str());
+        return LuaFunctionRef(m_state, top());
     }
 
-    bool hasBool(int index = STACK_TOP) {
-        return lua_isboolean(m_state.get(), index);
-    }
-
-    bool getBool(int index = STACK_TOP) {
-        return lua_toboolean(m_state.get(), index);
-    }
-
-    bool hasFunction(int index = STACK_TOP) {
-        return lua_isfunction(m_state.get(), index);
-    }
-
-    void getFunction(const char *name) {
-        auto returnType = requestGlobal(name);
-        if ( returnType != LuaType::FUNCTION_TYPE ) {
-            throw LuaException("'" + std::string(name) + "' is not a function");
-        }
-    }
-
-    void getFunction(const std::string &name) {
-        getFunction(name.c_str());
-    }
-
-    void safeCallFunction(int inputArgs, int outputArgs, int handlerIndex = 0) {
-        if (lua_pcall(m_state.get(), inputArgs, outputArgs, handlerIndex) != LUA_OK) {
-            throw LuaException(lua_tostring(m_state.get(), -1));
-        }
-    }
-
-    void callFunction(int inputArgs, int outputArgs) {
-        lua_call(m_state.get(), inputArgs, outputArgs);
+    LuaTableRef getTable(const std::string &name) {
+        lua_getglobal(m_state.get(), name.c_str());
+        return LuaTableRef(m_state, top());
     }
 
     void pop(int number_of_elements = 1) {
@@ -353,6 +348,10 @@ public:
     }
 
     int size() {
+        return lua_gettop(m_state.get());
+    }
+
+    LuaStackIndex top() {
         return lua_gettop(m_state.get());
     }
 
