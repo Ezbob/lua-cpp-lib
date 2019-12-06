@@ -23,12 +23,16 @@ public:
     LuaStackIndex(int i) : index(i) {}
     virtual ~LuaStackIndex() = default;
 
-    bool isTop() {
+    bool isFromTop() {
         return index <= 0;
     }
 
-    bool isBottom() {
+    bool isFromBottom() {
         return index >= 0;
+    }
+
+    operator int() {
+        return index;
     }
 
     int get() {
