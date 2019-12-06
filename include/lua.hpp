@@ -13,7 +13,6 @@ extern "C" {
 #include <memory>
 #include <exception>
 
-class LuaException;
 
 // generic lua index
 class LuaStackIndex {
@@ -142,7 +141,7 @@ protected:
 };
 
 struct LuaNumberRef : public LuaStackReferenceBase {
-    LuaNumberRef(std::shared_ptr<lua_State> s, LuaStackIndex i) : LuaStackReferenceBase(s, i, LuaType(LuaType::NUMBER_TYPE)) {}
+    LuaNumberRef(std::shared_ptr<lua_State> s, LuaStackIndex i) : LuaStackReferenceBase(s, i, LuaType::NUMBER_TYPE) {}
     virtual ~LuaNumberRef() = default;
 
     double getValue() {

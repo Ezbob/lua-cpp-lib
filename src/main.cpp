@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
 
     if ( auto tableRef = L.getTable("Player") ) {
         int top = L.size(), size;
-        std::cout << "-->" << top << std::endl;
+        std::cout << "top -->" << top << std::endl;
 
         std::cout << "is valid " << tableRef.getString("namama") << std::endl;
 
@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
         }
 
         size = L.size() - top;
-        std::cout << "-->" << size << std::endl;
+        std::cout << "size -->" << size << std::endl;
 
         std::cout << player.name << std::endl;
         std::cout << player.title << std::endl;
