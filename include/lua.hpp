@@ -109,35 +109,44 @@ class LuaState;
 
 class LuaStackReferenceBase {
     LuaType m_type;
+
     std::weak_ptr<lua_State> m_parent;
+
 protected:
     LuaStackIndex m_index;
+
     LuaStackReferenceBase(std::shared_ptr<lua_State> s, LuaStackIndex i, int type) 
         : m_type(LuaType(type)), m_parent(s), m_index(i.get()) {}
+
+    std::shared_ptr<lua_State> getParent() {
+        if (auto shrd_ptr = m_parent.lock()) {
+            return shrd_ptr;
+        }
+        throw LuaException("lua_State is out of scope");
+    }
+
 public:
     LuaStackReferenceBase(std::shared_ptr<lua_State> s, LuaStackIndex i, LuaType type) 
         : m_type(type), m_parent(s), m_index(i.get()) {}
     virtual ~LuaStackReferenceBase() = default;
 
     bool isValid() {
-        lua_State *state = getParent().get();
-        int index = m_index.get();
-        auto is_index_within_bounds = 0 < index && index <= lua_gettop(state);
-        auto is_right_type = lua_type(state, index) == m_type;
-        return is_index_within_bounds && is_right_type;
+        try {
+            lua_State *state = getParent().get();
+            int current_top = lua_gettop(state);
+            bool is_not_empty_stack = current_top != 0;
+            bool is_index_within_bounds = m_index.isFromBottom() && m_index <= current_top;
+            bool do_type_match = lua_type(state, m_index) == m_type;
+            return is_not_empty_stack && is_index_within_bounds && do_type_match;
+        } catch(const LuaException &e) {
+            return false;
+        }
     }
 
     operator bool() {
         return isValid();
     }
 
-protected:
-    std::shared_ptr<lua_State> getParent() {
-        if (auto shrd_ptr = m_parent.lock()) {
-            return shrd_ptr;
-        }
-        throw LuaException("LuaState is out of scope");
-    }
 };
 
 struct LuaNumberRef : public LuaStackReferenceBase {
@@ -274,7 +283,7 @@ public:
 
     void loadFile(const char *path) {
         if ( luaL_dofile(m_state.get(), path) != LUA_OK ) {
-            throw LuaException(lua_tostring(m_state.get(), -1));
+            throw LuaException(lua_tostring(m_state.get(), STACK_TOP));
         }
     }
 
