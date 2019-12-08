@@ -25,14 +25,15 @@ int main(int argc, char **argv) {
 
     L.loadFile(filename);
 
-    auto funref = L.getFunction("AddStuff");
+    if ( auto funref = L.getFunction("AddStuff", 2, 1) ) {
 
-    L.push(32);
-    L.push(20);
+        L.push(32);
+        L.push(20);
 
-    funref(2, 1);
+        funref();
 
-    std::cout << "Got result from lua: " << (*L.getNumber()) << std::endl;
+        std::cout << "Got result from lua: " << (*L.getNumber()) << std::endl;
+    }
 
     if ( auto tableRef = L.getTable("Player") ) {
         int top = L.size(), size;
@@ -52,11 +53,10 @@ int main(int argc, char **argv) {
             player.level = (*levelRef);
         }
 
-        if ( auto funcRef = tableRef.getFunction("F") ) {
+        if ( auto funcRef = tableRef.getFunction("F", 1, 1) ) {
             L.push(12);
-            funcRef(1, 1);
+            funcRef();
             std::cout << "Function F: " << L.getNumber() << std::endl;
-            L.pop();
         }
 
         if ( auto boolRef = tableRef.getBoolean("IsHero") ) {

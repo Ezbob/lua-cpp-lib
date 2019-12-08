@@ -200,14 +200,19 @@ struct LuaBooleanRef : public LuaStackReferenceBase {
     }
 };
 
-struct LuaFunctionRef : public LuaStackReferenceBase {
-    LuaFunctionRef(std::shared_ptr<lua_State> s, LuaStackIndex i) : LuaStackReferenceBase(s, i, LuaType::FUNCTION_TYPE) {}
+class LuaFunctionRef : public LuaStackReferenceBase {
+    unsigned int m_input;
+    unsigned int m_output;
+
+public:
+    LuaFunctionRef(std::shared_ptr<lua_State> s, LuaStackIndex i, const unsigned int input, const unsigned int output) 
+        : LuaStackReferenceBase(s, i, LuaType::FUNCTION_TYPE), m_input(input), m_output(output) {}
     virtual ~LuaFunctionRef() = default;
 
-    void safeCall(unsigned int input, unsigned int output, int handlerIndex = 0) {
+    void safeCall(int handlerIndex = 0) {
         if ( isValid() ) {
             auto shrd_ptr = getParent();
-            if (lua_pcall(shrd_ptr.get(), (int) input, (int) output, handlerIndex) != LUA_OK) {
+            if (lua_pcall(shrd_ptr.get(), (int) m_input, (int) m_output, handlerIndex) != LUA_OK) {
                 throw LuaException(lua_tostring(shrd_ptr.get(), STACK_TOP.get()));
             }
         }
@@ -217,8 +222,8 @@ struct LuaFunctionRef : public LuaStackReferenceBase {
         return *this;
     }
 
-    void operator()(unsigned int input, unsigned int output, int handlerIndex = 0) {
-        safeCall(input, output, handlerIndex);
+    void operator()(int handlerIndex = 0) {
+        safeCall(handlerIndex);
     }
 };
 
@@ -247,11 +252,11 @@ struct LuaTableRef : public LuaStackReferenceBase {
         return LuaNumberRef(state, lua_gettop(state.get()));
     }
 
-    LuaFunctionRef getFunction(const std::string &name) {
+    LuaFunctionRef getFunction(const std::string &name, const unsigned int input, const unsigned int output) {
         auto state = getParent();
         lua_pushstring(state.get(), name.c_str());
         lua_gettable(state.get(), m_index.get());
-        return LuaFunctionRef(state, lua_gettop(state.get()));
+        return LuaFunctionRef(state, lua_gettop(state.get()), input, output);
     }
 
 };
@@ -345,9 +350,9 @@ public:
         return LuaBooleanRef(m_state, top());
     }
 
-    LuaFunctionRef getFunction(const std::string &name) {
+    LuaFunctionRef getFunction(const std::string &name, const unsigned int input, const unsigned int output) {
         lua_getglobal(m_state.get(), name.c_str());
-        return LuaFunctionRef(m_state, top());
+        return LuaFunctionRef(m_state, top(), input, output);
     }
 
     LuaTableRef getTable(const std::string &name) {
