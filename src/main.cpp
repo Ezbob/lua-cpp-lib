@@ -1,6 +1,6 @@
 #include <iostream>
 #include <string>
-#include "lua.hpp"
+#include "lualao.hpp"
 
 struct Player {
     std::string title;
@@ -32,12 +32,16 @@ int main(int argc, char **argv) {
 
         funref();
 
+        stack_debug_print(L);
+
+        std::cout << "Is function ref still valid " << funref.isValid() << std::endl;
+
         std::cout << "Got result from lua: " << (*L.getNumber()) << std::endl;
     }
 
     if ( auto tableRef = L.getTable("Player") ) {
         int top = L.size(), size;
-        std::cout << "top -->" << top << std::endl;
+        std::cout << "top --> " << top << std::endl;
 
         std::cout << "is valid " << tableRef.getString("namama") << std::endl;
 
@@ -52,6 +56,8 @@ int main(int argc, char **argv) {
         if ( auto levelRef = tableRef.getNumber("Level") ) {
             player.level = (*levelRef);
         }
+
+        stack_debug_print(L);
 
         if ( auto funcRef = tableRef.getFunction("F", 1, 1) ) {
             L.push(12);
