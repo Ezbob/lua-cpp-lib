@@ -133,7 +133,7 @@ void stack_debug_print(LuaState &stack) {
         std::cout << "DEBUG Stack content: \n";
     }
     for (int i = top; i > 0; --i) {
-        std::cout << "DEBUG index(" << i << ", " << -((top - i) + 1) << ") => " << LuaType(lua_type(stack, i)).toString() << "\n";
+        std::cout << "DEBUG index(" << i << ", " << -((top - i) + 1) << ") => " << type_to_string(lua_type(stack, i)) << "\n";
     }
 }
 

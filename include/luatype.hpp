@@ -5,6 +5,33 @@
 #include "lua.hpp"
 #include <string>
 
+std::string type_to_string(int value) {
+    switch(value) {
+        case LUA_TNIL:
+            return "nil";
+        case LUA_TNONE:
+            return "none";
+        case LUA_TNUMBER:
+            return "number";
+        case LUA_TSTRING:
+            return "string";
+        case LUA_TBOOLEAN:
+            return "boolean";
+        case LUA_TTABLE:
+            return "table";
+        case LUA_TFUNCTION:
+            return "function";
+        case LUA_TUSERDATA:
+            return "userdata";
+        case LUA_TLIGHTUSERDATA:
+            return "lightuserdata";
+        case LUA_TTHREAD:
+            return "thread";
+        default:
+            return "unknown";
+    }
+}
+
 class LuaType {
 public:
     enum Types {
@@ -21,6 +48,7 @@ public:
     };
 
     LuaType(const int val) {
+        Types value;
         switch (val) {
             case LUA_TNONE: value = NONE_TYPE; break;
             case LUA_TNIL: value = NIL_TYPE; break;
@@ -34,58 +62,36 @@ public:
             case LUA_TLIGHTUSERDATA: value = LIGHTUSERDATA_TYPE; break;
             default: value = NONE_TYPE; break;
         }
+        m_value = value;
     };
     virtual ~LuaType() = default;
 
     operator int() const {
-        return value;
+        return m_value;
     }
 
     bool operator ==(const LuaType &other) const {
-        return value == other.value;
+        return m_value == other.m_value;
     }
 
     bool operator !=(const LuaType &other) const {
-        return value != other.value;
+        return m_value != other.m_value;
     }
 
     bool operator ==(const int &other) const {
-        return value == other;
+        return m_value == other;
     }
 
     bool operator !=(const int &other) const {
-        return value != other;
+        return m_value != other;
     }
 
     std::string toString() const {
-        switch(value) {
-            case NIL_TYPE:
-                return "nil";
-            case NONE_TYPE:
-                return "none";
-            case NUMBER_TYPE:
-                return "number";
-            case STRING_TYPE:
-                return "string";
-            case BOOLEAN_TYPE:
-                return "boolean";
-            case TABLE_TYPE:
-                return "table";
-            case FUNCTION_TYPE:
-                return "function";
-            case USERDATA_TYPE:
-                return "userdata";
-            case LIGHTUSERDATA_TYPE:
-                return "lightuserdata";
-            case THREAD_TYPE:
-                return "thread";
-            default:
-                return "unknown";
-        }
+        return type_to_string(static_cast<int>(m_value));
     }
 
 private:
-    enum Types value;
+    enum Types m_value;
 };
 
 #endif
