@@ -164,12 +164,32 @@ struct LuaTableRef : public LuaStackReferenceBase {
         return LuaFunctionRef(state, lua_gettop(state.get()), input, output);
     }
 
-    template<typename T>
-    void set(std::string const &name, T value) {
-        LuaState state = LuaState(getParent());
-        state.push(name);
-        state.push(value);
-        lua_settable(state, m_index);
+    void set(std::string const &name, std::string value) {
+        auto state = getParent();
+        lua_pushstring(state.get(), name.c_str());
+        lua_pushstring(state.get(), value.c_str());
+        lua_settable(state.get(), m_index);
+    }
+
+    void set(std::string const &name, double value) {
+        auto state = getParent();
+        lua_pushstring(state.get(), name.c_str());
+        lua_pushnumber(state.get(), value);
+        lua_settable(state.get(), m_index);
+    }
+
+    void set(std::string const &name, bool value) {
+        auto state = getParent();
+        lua_pushstring(state.get(), name.c_str());
+        lua_pushboolean(state.get(), value);
+        lua_settable(state.get(), m_index);
+    }
+
+    void set(std::string const &name,  lua_CFunction f) {
+        auto state = getParent();
+        lua_pushstring(state.get(), name.c_str());
+        lua_pushcfunction(state.get(), f);
+        lua_settable(state.get(), m_index);
     }
 };
 
