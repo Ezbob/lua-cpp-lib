@@ -12,21 +12,12 @@
 
 class LuaStackReferenceBase {
     LuaType m_type;
-
-    std::weak_ptr<lua_State> m_parent;
-
 protected:
+    std::shared_ptr<lua_State> m_parent;
     LuaStackIndex m_index;
 
     LuaStackReferenceBase(std::shared_ptr<lua_State> s, LuaStackIndex i, int type) 
         : m_type(LuaType(type)), m_parent(s), m_index(i.get()) {}
-
-    std::shared_ptr<lua_State> getParent() {
-        if (auto shrd_ptr = m_parent.lock()) {
-            return shrd_ptr;
-        }
-        throw LuaException("lua_State is out of scope");
-    }
 
 public:
     LuaStackReferenceBase(std::shared_ptr<lua_State> s, LuaStackIndex i, LuaType type) 
@@ -34,16 +25,12 @@ public:
     virtual ~LuaStackReferenceBase() = default;
 
     bool isValid() {
-        try {
-            lua_State *state = getParent().get();
-            int current_top = lua_gettop(state);
-            bool is_not_empty_stack = current_top != 0;
-            bool is_index_within_bounds = m_index.isFromBottom() && m_index <= current_top;
-            bool do_type_match = lua_type(state, m_index) == m_type;
-            return is_not_empty_stack && is_index_within_bounds && do_type_match;
-        } catch(const LuaException &e) {
-            return false;
-        }
+        lua_State *state = m_parent.get();
+        int current_top = lua_gettop(state);
+        bool is_not_empty_stack = current_top != 0;
+        bool is_index_within_bounds = m_index.isFromBottom() && m_index <= current_top;
+        bool do_type_match = lua_type(state, m_index) == m_type;
+        return is_not_empty_stack && is_index_within_bounds && do_type_match;
     }
 
     operator bool() {
@@ -58,8 +45,7 @@ struct LuaNumberRef : public LuaStackReferenceBase {
 
     double getValue() {
         if ( isValid() ) {
-            auto shrd_ptr = getParent();
-            return lua_tonumber(shrd_ptr.get(), m_index.get());
+            return lua_tonumber(m_parent.get(), m_index.get());
         }
         return 0;
     }
@@ -75,8 +61,7 @@ struct LuaStringRef : public LuaStackReferenceBase {
 
     std::string getValue() {
         if ( isValid() ) {
-            auto shrd_ptr = getParent();
-            return lua_tostring(shrd_ptr.get(), m_index.get());
+            return lua_tostring(m_parent.get(), m_index.get());
         }
         return "";
     }
@@ -92,8 +77,7 @@ struct LuaBooleanRef : public LuaStackReferenceBase {
 
     bool getValue() {
         if ( isValid() ) {
-            auto shrd_ptr = getParent();
-            return lua_toboolean(shrd_ptr.get(), m_index.get());
+            return lua_toboolean(m_parent.get(), m_index.get());
         }
         return false;
     }
@@ -114,9 +98,14 @@ public:
 
     void safeCall(int handlerIndex = 0) {
         if ( isValid() ) {
-            auto shrd_ptr = getParent();
-            if (lua_pcall(shrd_ptr.get(), (int) m_input, (int) m_output, handlerIndex) != LUA_OK) {
-                throw LuaException(lua_tostring(shrd_ptr.get(), STACK_TOP.get()));
+            int top = lua_gettop(m_parent.get());
+
+            if ( (top - m_index) < m_input ) {
+                throw LuaException("Not enough arguments parsed to function");
+            }
+
+            if (lua_pcall(m_parent.get(), m_input, m_output, handlerIndex) != LUA_OK) {
+                throw LuaException(lua_tostring(m_parent.get(), STACK_TOP.get()));
             }
         }
     }
@@ -137,56 +126,56 @@ struct LuaTableRef : public LuaStackReferenceBase {
     virtual ~LuaTableRef() = default;
 
     LuaStringRef getString(const std::string &name) {
-        auto state = getParent();
+        auto state = m_parent;
         lua_pushstring(state.get(), name.c_str());
         lua_gettable(state.get(), m_index.get());
         return LuaStringRef(state, lua_gettop(state.get()));
     }
 
     LuaBooleanRef getBoolean(const std::string &name) {
-        auto state = getParent();
+        auto state = m_parent;
         lua_pushstring(state.get(), name.c_str());
         lua_gettable(state.get(), m_index.get());
         return LuaBooleanRef(state, lua_gettop(state.get()));
     }
 
     LuaNumberRef getNumber(const std::string &name) {
-        auto state = getParent();
+        auto state = m_parent;
         lua_pushstring(state.get(), name.c_str());
         lua_gettable(state.get(), m_index.get());
         return LuaNumberRef(state, lua_gettop(state.get()));
     }
 
     LuaFunctionRef getFunction(const std::string &name, const int input, const int output) {
-        auto state = getParent();
+        auto state = m_parent;
         lua_pushstring(state.get(), name.c_str());
         lua_gettable(state.get(), m_index.get());
         return LuaFunctionRef(state, lua_gettop(state.get()), input, output);
     }
 
     void set(std::string const &name, std::string value) {
-        auto state = getParent();
+        auto state = m_parent;
         lua_pushstring(state.get(), name.c_str());
         lua_pushstring(state.get(), value.c_str());
         lua_settable(state.get(), m_index);
     }
 
     void set(std::string const &name, double value) {
-        auto state = getParent();
+        auto state = m_parent;
         lua_pushstring(state.get(), name.c_str());
         lua_pushnumber(state.get(), value);
         lua_settable(state.get(), m_index);
     }
 
     void set(std::string const &name, bool value) {
-        auto state = getParent();
+        auto state = m_parent;
         lua_pushstring(state.get(), name.c_str());
         lua_pushboolean(state.get(), value);
         lua_settable(state.get(), m_index);
     }
 
     void set(std::string const &name,  lua_CFunction f) {
-        auto state = getParent();
+        auto state = m_parent;
         lua_pushstring(state.get(), name.c_str());
         lua_pushcfunction(state.get(), f);
         lua_settable(state.get(), m_index);

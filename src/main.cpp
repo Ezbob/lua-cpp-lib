@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
     if ( auto funref = L.getFunction("AddStuff", 2, 1) ) {
 
         L.push(32);
-        L.push(20);
+        L.push(11);
 
         funref();
 
