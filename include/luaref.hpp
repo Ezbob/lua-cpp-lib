@@ -8,7 +8,6 @@
 #include "luaindex.hpp"
 #include "luaexception.hpp"
 #include "luatype.hpp"
-#include "luastate.hpp"
 
 class LuaStackReferenceBase {
     LuaType m_type;
@@ -119,66 +118,56 @@ public:
     }
 };
 
-class LuaState;
-
 struct LuaTableRef : public LuaStackReferenceBase {
     LuaTableRef(std::shared_ptr<lua_State> s, LuaStackIndex i) : LuaStackReferenceBase(s, i, LuaType::TABLE_TYPE) {}
     virtual ~LuaTableRef() = default;
 
     LuaStringRef getString(const std::string &name) {
-        auto state = m_parent;
-        lua_pushstring(state.get(), name.c_str());
-        lua_gettable(state.get(), m_index.get());
-        return LuaStringRef(state, lua_gettop(state.get()));
+        lua_pushstring(m_parent.get(), name.c_str());
+        lua_gettable(m_parent.get(), m_index.get());
+        return LuaStringRef(m_parent, lua_gettop(m_parent.get()));
     }
 
     LuaBooleanRef getBoolean(const std::string &name) {
-        auto state = m_parent;
-        lua_pushstring(state.get(), name.c_str());
-        lua_gettable(state.get(), m_index.get());
-        return LuaBooleanRef(state, lua_gettop(state.get()));
+        lua_pushstring(m_parent.get(), name.c_str());
+        lua_gettable(m_parent.get(), m_index.get());
+        return LuaBooleanRef(m_parent, lua_gettop(m_parent.get()));
     }
 
     LuaNumberRef getNumber(const std::string &name) {
-        auto state = m_parent;
-        lua_pushstring(state.get(), name.c_str());
-        lua_gettable(state.get(), m_index.get());
-        return LuaNumberRef(state, lua_gettop(state.get()));
+        lua_pushstring(m_parent.get(), name.c_str());
+        lua_gettable(m_parent.get(), m_index.get());
+        return LuaNumberRef(m_parent, lua_gettop(m_parent.get()));
     }
 
     LuaFunctionRef getFunction(const std::string &name, const int input, const int output) {
-        auto state = m_parent;
-        lua_pushstring(state.get(), name.c_str());
-        lua_gettable(state.get(), m_index.get());
-        return LuaFunctionRef(state, lua_gettop(state.get()), input, output);
+        lua_pushstring(m_parent.get(), name.c_str());
+        lua_gettable(m_parent.get(), m_index.get());
+        return LuaFunctionRef(m_parent, lua_gettop(m_parent.get()), input, output);
     }
 
     void set(std::string const &name, std::string value) {
-        auto state = m_parent;
-        lua_pushstring(state.get(), name.c_str());
-        lua_pushstring(state.get(), value.c_str());
-        lua_settable(state.get(), m_index);
+        lua_pushstring(m_parent.get(), name.c_str());
+        lua_pushstring(m_parent.get(), value.c_str());
+        lua_settable(m_parent.get(), m_index);
     }
 
     void set(std::string const &name, double value) {
-        auto state = m_parent;
-        lua_pushstring(state.get(), name.c_str());
-        lua_pushnumber(state.get(), value);
-        lua_settable(state.get(), m_index);
+        lua_pushstring(m_parent.get(), name.c_str());
+        lua_pushnumber(m_parent.get(), value);
+        lua_settable(m_parent.get(), m_index);
     }
 
     void set(std::string const &name, bool value) {
-        auto state = m_parent;
-        lua_pushstring(state.get(), name.c_str());
-        lua_pushboolean(state.get(), value);
-        lua_settable(state.get(), m_index);
+        lua_pushstring(m_parent.get(), name.c_str());
+        lua_pushboolean(m_parent.get(), value);
+        lua_settable(m_parent.get(), m_index);
     }
 
     void set(std::string const &name,  lua_CFunction f) {
-        auto state = m_parent;
-        lua_pushstring(state.get(), name.c_str());
-        lua_pushcfunction(state.get(), f);
-        lua_settable(state.get(), m_index);
+        lua_pushstring(m_parent.get(), name.c_str());
+        lua_pushcfunction(m_parent.get(), f);
+        lua_settable(m_parent.get(), m_index);
     }
 };
 
