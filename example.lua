@@ -10,3 +10,7 @@ function AddStuff(a, b)
     print("ADDSTUFF")
     return a * b + 2
 end
+
+function JustPrint()
+    print("I just print stuff")
+end

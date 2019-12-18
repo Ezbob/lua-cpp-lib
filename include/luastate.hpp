@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <iostream>
+#include <functional>
 #include "lua.hpp"
 #include "luaref.hpp"
 #include "luaindex.hpp"
@@ -122,6 +123,13 @@ public:
         return lua_gettop(m_state.get());
     }
 
+    void runContext(std::function<void()> &&f) {
+        int t = size(), s;
+        f();
+        s = size() - t;
+        if (s > 0) pop(s);
+    }
+
 private:
     std::shared_ptr<lua_State> m_state;
 };
@@ -136,5 +144,7 @@ void stack_debug_print(LuaState &stack) {
         std::cout << "DEBUG index(" << i << ", " << -((top - i) + 1) << ") => " << type_to_string(lua_type(stack, i)) << "\n";
     }
 }
+
+
 
 #endif

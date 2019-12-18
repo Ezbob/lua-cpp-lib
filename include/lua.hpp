@@ -7,3 +7,10 @@ extern "C" {
 #include "lualib.h"
 #include "lauxlib.h"
 }
+
+#include "luacontext.hpp"
+#include "luastate.hpp"
+#include "luaref.hpp"
+#include "luaexception.hpp"
+#include "luaindex.hpp"
+#include "luatype.hpp"

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
-#include "lualao.hpp"
+#include "lua.hpp"
+
 
 struct Player {
     std::string title;
@@ -25,60 +26,69 @@ int main(int argc, char **argv) {
 
     L.loadFile(filename);
 
-    if ( auto funref = L.getFunction("AddStuff", 2, 1) ) {
+    {
+        LuaContext ctx(L);
+        if ( auto funref = L.getFunction("AddStuff", 2, 1) ) {
 
-        L.push(32);
-        L.push(11);
+            L.push(32);
+            L.push(11);
 
-        funref();
+            funref();
 
-        stack_debug_print(L);
+            stack_debug_print(L);
 
-        std::cout << "Is function ref still valid " << funref.isValid() << std::endl;
+            std::cout << "Is function ref still valid " << funref.isValid() << std::endl;
 
-        std::cout << "Got result from lua: " << (*L.getNumber()) << std::endl;
+            std::cout << "Got result from lua: " << (*L.getNumber()) << std::endl;
+        }
+
+        if ( auto funref = L.getFunction("JustPrint", 0, 0) ) {
+            funref();
+        }
+    }
+    
+
+    std::cout << "1 size " << L.size() << std::endl;
+    stack_debug_print(L);
+
+    {
+        LuaContext ctx(L);
+
+        if ( auto tableRef = L.getTable("Player") ) {
+
+            if ( auto nameRef = tableRef.getString("Name") ) {
+                player.name = (*nameRef);
+            }
+
+            if ( auto titleRef = tableRef.getString("Title") ) {
+                player.title = (*titleRef);
+            }
+
+            if ( auto levelRef = tableRef.getNumber("Level") ) {
+                player.level = (*levelRef);
+            }
+
+            stack_debug_print(L);
+
+            if ( auto funcRef = tableRef.getFunction("F", 1, 1) ) {
+                L.push(12);
+                funcRef();
+                std::cout << "Function F: " << L.getNumber() << std::endl;
+            }
+
+            if ( auto boolRef = tableRef.getBoolean("IsHero") ) {
+                std::cout << "Is hero? " << (*boolRef) << std::endl;
+            }
+
+            std::cout << player.name << std::endl;
+            std::cout << player.title << std::endl;
+            std::cout << player.level << std::endl;
+
+            std::cout << "2 size " << L.size() << std::endl;
+        }
     }
 
-    if ( auto tableRef = L.getTable("Player") ) {
-        int top = L.size(), size;
-        std::cout << "top --> " << top << std::endl;
-
-        std::cout << "is valid " << tableRef.getString("namama") << std::endl;
-
-        if ( auto nameRef = tableRef.getString("Name") ) {
-            player.name = (*nameRef);
-        }
-
-        if ( auto titleRef = tableRef.getString("Title") ) {
-            player.title = (*titleRef);
-        }
-
-        if ( auto levelRef = tableRef.getNumber("Level") ) {
-            player.level = (*levelRef);
-        }
-
-        stack_debug_print(L);
-
-        if ( auto funcRef = tableRef.getFunction("F", 1, 1) ) {
-            L.push(12);
-            funcRef();
-            std::cout << "Function F: " << L.getNumber() << std::endl;
-        }
-
-        if ( auto boolRef = tableRef.getBoolean("IsHero") ) {
-            std::cout << "Is hero? " << (*boolRef) << std::endl;
-        }
-
-        size = L.size() - top;
-        std::cout << "size -->" << size << std::endl;
-
-        std::cout << player.name << std::endl;
-        std::cout << player.title << std::endl;
-        std::cout << player.level << std::endl;
-
-        L.pop(size);
-    }
-    std::cout << "size " << L.size() << std::endl;
+    stack_debug_print(L);
 
     /*
     L.push("Name");
