@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
     L.loadFile(filename);
 
     {
-        LuaContext ctx(L);
+        LuaStackContext ctx(L);
         if ( auto funref = L.getFunction("AddStuff", 2, 1) ) {
 
             L.push(32);
@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
     stack_debug_print(L);
 
     {
-        LuaContext ctx(L);
+        LuaStackContext ctx(L);
 
         if ( auto tableRef = L.getTable("Player") ) {
 

@@ -6,15 +6,15 @@
 #include <memory>
 #include "luastate.hpp"
 
-class LuaContext {
+class LuaStackContext {
     LuaState m_state;
     int m_top;
 public:
-    LuaContext(LuaState s) : m_state(s) {
+    LuaStackContext(LuaState s) : m_state(s) {
         m_top = lua_gettop(s);
     }
 
-    ~LuaContext() {
+    ~LuaStackContext() {
         int size = lua_gettop(m_state) - m_top;
         if (size > 0) lua_pop(m_state, size);
     }
