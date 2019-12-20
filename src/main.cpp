@@ -90,38 +90,5 @@ int main(int argc, char **argv) {
 
     stack_debug_print(L);
 
-    /*
-    L.push("Name");
-    L.requestFromTable();
-    if ( L.hasString() ) {
-        player.name = L.getString();
-    }
-    L.pop();
-
-    L.push("Title");
-    L.requestFromTable();
-    if ( L.hasString() ) {
-        player.title = L.getString();
-    }
-    L.pop();
-
-    L.push("Level");
-    L.requestFromTable();
-    if ( L.hasNumber() ) {
-        player.level = L.getNumber();
-    }
-    L.pop();
-
-    std::cout <<
-        player.name <<
-        ", " <<
-        player.title <<
-        ", (level " <<
-        player.level <<
-        ")" <<
-        std::endl;
-
-    */
-
     return 0;
 }
