@@ -140,7 +140,7 @@ struct LuaTableRef : public LuaStackReferenceBase {
         return LuaNumberRef(m_parent, lua_gettop(m_parent.get()));
     }
 
-    LuaFunctionRef getFunction(const std::string &name, const int input, const int output) {
+    LuaFunctionRef getFunction(const std::string &name, const int input = 0, const int output = 0) {
         lua_pushstring(m_parent.get(), name.c_str());
         lua_gettable(m_parent.get(), m_index.get());
         return LuaFunctionRef(m_parent, lua_gettop(m_parent.get()), input, output);

@@ -101,7 +101,7 @@ public:
         return LuaBooleanRef(m_state, top());
     }
 
-    LuaFunctionRef getFunction(const std::string &name, const int input, const int output) {
+    LuaFunctionRef getFunction(const std::string &name, const int input = 0, const int output = 0) {
         lua_getglobal(m_state.get(), name.c_str());
         return LuaFunctionRef(m_state, top(), input, output);
     }
