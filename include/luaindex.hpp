@@ -11,11 +11,11 @@ public:
     virtual ~LuaStackIndex() = default;
 
     bool isFromTop() {
-        return index <= 0;
+        return index < 0;
     }
 
     bool isFromBottom() {
-        return index >= 0;
+        return index > 0;
     }
 
     operator int() {
