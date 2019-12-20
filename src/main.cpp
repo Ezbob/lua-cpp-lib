@@ -42,11 +42,11 @@ int main(int argc, char **argv) {
             std::cout << "Got result from lua: " << (*L.getNumber()) << std::endl;
         }
 
-        if ( auto funref = L.getFunction("JustPrint", 0, 0) ) {
+        if ( auto funref = L.getFunction("JustPrint") ) {
             funref();
         }
     }
-    
+
 
     std::cout << "1 size " << L.size() << std::endl;
     stack_debug_print(L);
@@ -112,13 +112,13 @@ int main(int argc, char **argv) {
     }
     L.pop();
 
-    std::cout << 
-        player.name << 
-        ", " << 
+    std::cout <<
+        player.name <<
+        ", " <<
         player.title <<
         ", (level " <<
         player.level <<
-        ")" << 
+        ")" <<
         std::endl;
 
     */
