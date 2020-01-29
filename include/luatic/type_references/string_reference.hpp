@@ -4,7 +4,7 @@
 #include <memory>
 #include "stack_reference_base.hpp"
 #include "lua.h"
-#include "type.hpp"
+#include "luatic/type.hpp"
 
 namespace luatic {
 

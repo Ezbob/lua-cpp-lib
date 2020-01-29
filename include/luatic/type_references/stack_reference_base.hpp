@@ -3,7 +3,7 @@
 
 #include <memory>
 #include "lua.h"
-#include "stack_index.hpp"
+#include "luatic/stack_index.hpp"
 
 namespace luatic {
 

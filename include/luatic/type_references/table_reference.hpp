@@ -4,9 +4,9 @@
 #include <memory>
 #include <string>
 #include "lua.h"
-#include "stack_index.hpp"
+#include "luatic/stack_index.hpp"
+#include "luatic/type.hpp"
 #include "stack_reference_base.hpp"
-#include "type.hpp"
 #include "string_reference.hpp"
 #include "boolean_reference.hpp"
 #include "number_reference.hpp"

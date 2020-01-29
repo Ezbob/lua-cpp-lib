@@ -2,7 +2,7 @@
 #pragma once
 
 #include "stack_reference_base.hpp"
-#include "type.hpp"
+#include "luatic/type.hpp"
 
 namespace luatic {
 
