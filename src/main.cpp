@@ -1,7 +1,6 @@
 #include <iostream>
 #include <string>
-#include "lua.hpp"
-
+#include "luatic.hpp"
 
 struct Player {
     std::string title;
@@ -20,14 +19,14 @@ int main(int argc, char **argv) {
 
     char *filename = argv[1];
 
-    LuaState L;
+    luatic::state L;
 
     luaL_openlibs(L);
 
     L.loadFile(filename);
 
     {
-        LuaStackContext ctx(L);
+        luatic::stack_context ctx(L);
         if ( auto funref = L.getFunction("AddStuff", 2, 1) ) {
 
             L.push(32);
@@ -52,7 +51,7 @@ int main(int argc, char **argv) {
     stack_debug_print(L);
 
     {
-        LuaStackContext ctx(L);
+        luatic::stack_context ctx(L);
 
         if ( auto tableRef = L.getTable("Player") ) {
 
