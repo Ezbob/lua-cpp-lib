@@ -108,7 +108,7 @@ namespace lualao {
             return m_value != other;
         }
 
-        std::string toString() const {
+        std::string to_string() const {
             return type_to_string(m_value);
         }
 

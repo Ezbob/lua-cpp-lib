@@ -7,6 +7,12 @@
 #include <iostream>
 #include <functional>
 
+extern "C" {
+#include "lua.h"
+#include "lualib.h"
+#include "lauxlib.h"
+};
+
 #include "stack_index.hpp"
 #include "lua_exception.hpp"
 
@@ -34,7 +40,7 @@ namespace lualao {
             return m_state.get();
         }
 
-        bool checkError(int return_code) {
+        bool check_error(int return_code) {
             if (return_code != LUA_OK) {
                 std::string errormsg = lua_tostring(m_state.get(), -1);
                 std::cerr << errormsg << std::endl;
@@ -43,14 +49,14 @@ namespace lualao {
             return true;
         }
 
-        void loadFile(const char *path) {
+        void load_file(const char *path) {
             if (luaL_dofile(m_state.get(), path) != LUA_OK) {
                 throw lua_exception(lua_tostring(m_state.get(), STACK_TOP));
             }
         }
 
-        void loadFile(const std::string &path) {
-            loadFile(path.c_str());
+        void load_file(const std::string &path) {
+            load_file(path.c_str());
         }
 
         void push(void) {
@@ -77,44 +83,44 @@ namespace lualao {
             lua_pushstring(m_state.get(), val.c_str());
         }
 
-        string_reference getString(stack_index i = STACK_TOP) {
+        string_reference get_string(stack_index i = STACK_TOP) {
             lua_tostring(m_state.get(), i.get());
             return string_reference(m_state, size());
         }
 
-        number_reference getNumber(stack_index i = STACK_TOP) {
+        number_reference get_number(stack_index i = STACK_TOP) {
             lua_tonumber(m_state.get(), i.get());
             return number_reference(m_state, lua_gettop(m_state.get()));
         }
 
-        boolean_reference getBoolean(stack_index i = STACK_TOP) {
+        boolean_reference get_boolean(stack_index i = STACK_TOP) {
             lua_toboolean(m_state.get(), i.get());
             return boolean_reference(m_state, lua_gettop(m_state.get()));
         }
 
-        string_reference getString(const std::string &name) {
+        string_reference get_string(const std::string &name) {
             lua_getglobal(m_state.get(), name.c_str());
             return string_reference(m_state, top());
         }
 
-        number_reference getNumber(const std::string &name) {
+        number_reference get_number(const std::string &name) {
             lua_getglobal(m_state.get(), name.c_str());
             return number_reference(m_state, top());
         }
 
-        boolean_reference getBoolean(const std::string &name) {
+        boolean_reference get_boolean(const std::string &name) {
             lua_getglobal(m_state.get(), name.c_str());
             return boolean_reference(m_state, top());
         }
 
-        function_reference getFunction(const std::string &name,
-                                       const int input = 0,
-                                       const int output = 0) {
+        function_reference get_function(const std::string &name,
+                                        const int input = 0,
+                                        const int output = 0) {
             lua_getglobal(m_state.get(), name.c_str());
             return function_reference(m_state, top(), input, output);
         }
 
-        table_reference getTable(const std::string &name) {
+        table_reference get_table(const std::string &name) {
             lua_getglobal(m_state.get(), name.c_str());
             return table_reference(m_state, top());
         }
@@ -131,12 +137,16 @@ namespace lualao {
             return lua_gettop(m_state.get());
         }
 
-        void runContext(std::function<void()> &&f) {
+        void run_context(std::function<void()> &&f) {
             int t = size(), s;
             f();
             s = size() - t;
             if (s > 0)
                 pop(s);
+        }
+
+        void open_libs() {
+            luaL_openlibs(m_state.get());
         }
 
       private:

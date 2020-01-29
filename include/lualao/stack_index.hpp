@@ -11,11 +11,11 @@ namespace lualao {
             : index(i) {}
         virtual ~stack_index() = default;
 
-        bool isFromTop() {
+        bool is_from_top() {
             return index < 0;
         }
 
-        bool isFromBottom() {
+        bool is_from_bottom() {
             return index > 0;
         }
 

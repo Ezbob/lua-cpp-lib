@@ -19,27 +19,27 @@ namespace lualao {
             : stack_reference_base(s, i, type::TABLE_TYPE) {}
         virtual ~table_reference() = default;
 
-        string_reference getString(const std::string &name) {
+        string_reference get_string(const std::string &name) {
             lua_pushstring(m_parent.get(), name.c_str());
             lua_gettable(m_parent.get(), m_index.get());
             return string_reference(m_parent, lua_gettop(m_parent.get()));
         }
 
-        boolean_reference getBoolean(const std::string &name) {
+        boolean_reference get_boolean(const std::string &name) {
             lua_pushstring(m_parent.get(), name.c_str());
             lua_gettable(m_parent.get(), m_index.get());
             return boolean_reference(m_parent, lua_gettop(m_parent.get()));
         }
 
-        number_reference getNumber(const std::string &name) {
+        number_reference get_number(const std::string &name) {
             lua_pushstring(m_parent.get(), name.c_str());
             lua_gettable(m_parent.get(), m_index.get());
             return number_reference(m_parent, lua_gettop(m_parent.get()));
         }
 
-        function_reference getFunction(const std::string &name,
-                                       const int input = 0,
-                                       const int output = 0) {
+        function_reference get_function(const std::string &name,
+                                        const int input = 0,
+                                        const int output = 0) {
             lua_pushstring(m_parent.get(), name.c_str());
             lua_gettable(m_parent.get(), m_index.get());
             return function_reference(m_parent, lua_gettop(m_parent.get()),

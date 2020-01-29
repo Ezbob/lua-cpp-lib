@@ -29,7 +29,7 @@ namespace lualao {
             int current_top = lua_gettop(state);
             bool is_not_empty_stack = current_top != 0;
             bool is_index_within_bounds =
-                m_index.isFromBottom() && m_index <= current_top;
+                m_index.is_from_bottom() && m_index <= current_top;
             bool do_type_match = lua_type(state, m_index) == m_type;
             return is_not_empty_stack && is_index_within_bounds &&
                    do_type_match;

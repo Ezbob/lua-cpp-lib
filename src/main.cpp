@@ -22,13 +22,13 @@ int main(int argc, char **argv) {
 
     lualao::state L;
 
-    luaL_openlibs(L);
+    L.open_libs();
 
-    L.loadFile(filename);
+    L.load_file(filename);
 
     {
         lualao::stack_context ctx(L);
-        if (auto funref = L.getFunction("AddStuff", 2, 1)) {
+        if (auto funref = L.get_function("AddStuff", 2, 1)) {
 
             L.push(32);
             L.push(11);
@@ -40,11 +40,11 @@ int main(int argc, char **argv) {
             std::cout << "Is function ref still valid " << funref.isValid()
                       << std::endl;
 
-            std::cout << "Got result from lua: " << (*L.getNumber())
+            std::cout << "Got result from lua: " << (*L.get_number())
                       << std::endl;
         }
 
-        if (auto funref = L.getFunction("JustPrint")) {
+        if (auto funref = L.get_function("JustPrint")) {
             funref();
         }
     }
@@ -55,29 +55,29 @@ int main(int argc, char **argv) {
     {
         lualao::stack_context ctx(L);
 
-        if (auto tableRef = L.getTable("Player")) {
+        if (auto tableRef = L.get_table("Player")) {
 
-            if (auto nameRef = tableRef.getString("Name")) {
+            if (auto nameRef = tableRef.get_string("Name")) {
                 player.name = (*nameRef);
             }
 
-            if (auto titleRef = tableRef.getString("Title")) {
+            if (auto titleRef = tableRef.get_string("Title")) {
                 player.title = (*titleRef);
             }
 
-            if (auto levelRef = tableRef.getNumber("Level")) {
+            if (auto levelRef = tableRef.get_number("Level")) {
                 player.level = (*levelRef);
             }
 
             lualao::stack_debug_print(L);
 
-            if (auto funcRef = tableRef.getFunction("F", 1, 1)) {
+            if (auto funcRef = tableRef.get_function("F", 1, 1)) {
                 L.push(12);
                 funcRef();
-                std::cout << "Function F: " << L.getNumber() << std::endl;
+                std::cout << "Function F: " << L.get_number() << std::endl;
             }
 
-            if (auto boolRef = tableRef.getBoolean("IsHero")) {
+            if (auto boolRef = tableRef.get_boolean("IsHero")) {
                 std::cout << "Is hero? " << (*boolRef) << std::endl;
             }
 
