@@ -1,6 +1,6 @@
 #include <iostream>
 #include <string>
-#include "luatic.hpp"
+#include "luatic/luatic.hpp"
 
 struct Player {
     std::string title;
