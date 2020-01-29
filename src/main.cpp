@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
 
             funref();
 
-            stack_debug_print(L);
+            luatic::stack_debug_print(L);
 
             std::cout << "Is function ref still valid " << funref.isValid() << std::endl;
 
@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
 
 
     std::cout << "1 size " << L.size() << std::endl;
-    stack_debug_print(L);
+    luatic::stack_debug_print(L);
 
     {
         luatic::stack_context ctx(L);
@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
                 player.level = (*levelRef);
             }
 
-            stack_debug_print(L);
+            luatic::stack_debug_print(L);
 
             if ( auto funcRef = tableRef.getFunction("F", 1, 1) ) {
                 L.push(12);
@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    stack_debug_print(L);
+    luatic::stack_debug_print(L);
 
     return 0;
 }
