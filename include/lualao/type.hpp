@@ -4,7 +4,7 @@
 #include "lua.h"
 #include <string>
 
-namespace luatic {
+namespace lualao {
     std::string type_to_string(int value) {
         switch (value) {
             case LUA_TNIL:

@@ -1,6 +1,6 @@
 #include <iostream>
 #include <string>
-#include "luatic/luatic.hpp"
+#include "lualao/lualao.hpp"
 
 struct Player {
     std::string title;
@@ -10,8 +10,9 @@ struct Player {
 
 int main(int argc, char **argv) {
 
-    if ( argc < 2 ) {
-        std::cerr << "Error: Expected first argument to be path to script" << std::endl;
+    if (argc < 2) {
+        std::cerr << "Error: Expected first argument to be path to script"
+                  << std::endl;
         exit(1);
     }
 
@@ -19,63 +20,64 @@ int main(int argc, char **argv) {
 
     char *filename = argv[1];
 
-    luatic::state L;
+    lualao::state L;
 
     luaL_openlibs(L);
 
     L.loadFile(filename);
 
     {
-        luatic::stack_context ctx(L);
-        if ( auto funref = L.getFunction("AddStuff", 2, 1) ) {
+        lualao::stack_context ctx(L);
+        if (auto funref = L.getFunction("AddStuff", 2, 1)) {
 
             L.push(32);
             L.push(11);
 
             funref();
 
-            luatic::stack_debug_print(L);
+            lualao::stack_debug_print(L);
 
-            std::cout << "Is function ref still valid " << funref.isValid() << std::endl;
+            std::cout << "Is function ref still valid " << funref.isValid()
+                      << std::endl;
 
-            std::cout << "Got result from lua: " << (*L.getNumber()) << std::endl;
+            std::cout << "Got result from lua: " << (*L.getNumber())
+                      << std::endl;
         }
 
-        if ( auto funref = L.getFunction("JustPrint") ) {
+        if (auto funref = L.getFunction("JustPrint")) {
             funref();
         }
     }
 
-
     std::cout << "1 size " << L.size() << std::endl;
-    luatic::stack_debug_print(L);
+    lualao::stack_debug_print(L);
 
     {
-        luatic::stack_context ctx(L);
+        lualao::stack_context ctx(L);
 
-        if ( auto tableRef = L.getTable("Player") ) {
+        if (auto tableRef = L.getTable("Player")) {
 
-            if ( auto nameRef = tableRef.getString("Name") ) {
+            if (auto nameRef = tableRef.getString("Name")) {
                 player.name = (*nameRef);
             }
 
-            if ( auto titleRef = tableRef.getString("Title") ) {
+            if (auto titleRef = tableRef.getString("Title")) {
                 player.title = (*titleRef);
             }
 
-            if ( auto levelRef = tableRef.getNumber("Level") ) {
+            if (auto levelRef = tableRef.getNumber("Level")) {
                 player.level = (*levelRef);
             }
 
-            luatic::stack_debug_print(L);
+            lualao::stack_debug_print(L);
 
-            if ( auto funcRef = tableRef.getFunction("F", 1, 1) ) {
+            if (auto funcRef = tableRef.getFunction("F", 1, 1)) {
                 L.push(12);
                 funcRef();
                 std::cout << "Function F: " << L.getNumber() << std::endl;
             }
 
-            if ( auto boolRef = tableRef.getBoolean("IsHero") ) {
+            if (auto boolRef = tableRef.getBoolean("IsHero")) {
                 std::cout << "Is hero? " << (*boolRef) << std::endl;
             }
 
@@ -87,7 +89,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    luatic::stack_debug_print(L);
+    lualao::stack_debug_print(L);
 
     return 0;
 }

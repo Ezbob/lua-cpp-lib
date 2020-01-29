@@ -16,7 +16,7 @@
 #include "type_references/string_reference.hpp"
 #include "type_references/table_reference.hpp"
 
-namespace luatic {
+namespace lualao {
 
     class state {
       public:

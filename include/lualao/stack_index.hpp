@@ -1,7 +1,7 @@
 
 #pragma once
 
-namespace luatic {
+namespace lualao {
     // generic lua index
     class stack_index {
         int index;

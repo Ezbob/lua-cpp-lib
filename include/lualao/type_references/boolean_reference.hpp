@@ -4,13 +4,13 @@
 #include <memory>
 #include "lua.h"
 #include "stack_reference_base.hpp"
-#include "luatic/stack_index.hpp"
-#include "luatic/type.hpp"
+#include "lualao/stack_index.hpp"
+#include "lualao/type.hpp"
 
-namespace luatic {
+namespace lualao {
 
     class boolean_reference: public stack_reference_base {
-    public:
+      public:
         boolean_reference(std::shared_ptr<lua_State> s, stack_index i)
             : stack_reference_base(s, i, type::BOOLEAN_TYPE) {}
         virtual ~boolean_reference() = default;
@@ -27,4 +27,4 @@ namespace luatic {
         }
     };
 
-}; // namespace luatic
+}; // namespace lualao

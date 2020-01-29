@@ -6,7 +6,7 @@
 #include <memory>
 #include "state.hpp"
 
-namespace luatic {
+namespace lualao {
 
     class stack_context {
       private:

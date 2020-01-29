@@ -2,12 +2,12 @@
 #pragma once
 
 #include "stack_reference_base.hpp"
-#include "luatic/type.hpp"
+#include "lualao/type.hpp"
 
-namespace luatic {
+namespace lualao {
 
-    class number_reference : public stack_reference_base {
-    public:
+    class number_reference: public stack_reference_base {
+      public:
         number_reference(std::shared_ptr<lua_State> s, stack_index i)
             : stack_reference_base(s, i, type::NUMBER_TYPE) {}
         virtual ~number_reference() = default;
@@ -24,4 +24,4 @@ namespace luatic {
         }
     };
 
-}; // namespace luatic
+}; // namespace lualao

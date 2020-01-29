@@ -3,9 +3,9 @@
 
 #include <memory>
 #include "lua.h"
-#include "luatic/stack_index.hpp"
+#include "lualao/stack_index.hpp"
 
-namespace luatic {
+namespace lualao {
 
     class stack_reference_base {
       private:
@@ -40,4 +40,4 @@ namespace luatic {
         }
     };
 
-}; // namespace luatic
+}; // namespace lualao

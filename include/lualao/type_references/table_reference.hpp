@@ -4,15 +4,15 @@
 #include <memory>
 #include <string>
 #include "lua.h"
-#include "luatic/stack_index.hpp"
-#include "luatic/type.hpp"
+#include "lualao/stack_index.hpp"
+#include "lualao/type.hpp"
 #include "stack_reference_base.hpp"
 #include "string_reference.hpp"
 #include "boolean_reference.hpp"
 #include "number_reference.hpp"
 #include "function_reference.hpp"
 
-namespace luatic {
+namespace lualao {
 
     struct table_reference: public stack_reference_base {
         table_reference(std::shared_ptr<lua_State> s, stack_index i)
@@ -71,4 +71,4 @@ namespace luatic {
         }
     };
 
-}; // namespace luatic
+}; // namespace lualao

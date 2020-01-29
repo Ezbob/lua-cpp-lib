@@ -4,9 +4,9 @@
 #include <memory>
 #include "stack_reference_base.hpp"
 #include "lua.h"
-#include "luatic/type.hpp"
+#include "lualao/type.hpp"
 
-namespace luatic {
+namespace lualao {
 
     class string_reference: public stack_reference_base {
       public:
@@ -26,4 +26,4 @@ namespace luatic {
         }
     };
 
-}; // namespace luatic
+}; // namespace lualao

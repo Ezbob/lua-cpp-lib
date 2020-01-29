@@ -4,11 +4,11 @@
 #include "lua.h"
 #include <memory>
 #include "stack_reference_base.hpp"
-#include "luatic/stack_index.hpp"
-#include "luatic/type.hpp"
-#include "luatic/lua_exception.hpp"
+#include "lualao/stack_index.hpp"
+#include "lualao/type.hpp"
+#include "lualao/lua_exception.hpp"
 
-namespace luatic {
+namespace lualao {
 
     class function_reference: public stack_reference_base {
       private:
@@ -49,4 +49,4 @@ namespace luatic {
         }
     };
 
-}; // namespace luatic
+}; // namespace lualao
